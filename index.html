@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎊 The Tet Cipher Wheel — English Club Game</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ╔══════════════════════════════════════════╗
+       ║  SAKURA FALLING PETALS (Background)      ║
+       ╚══════════════════════════════════════════╝ -->
+  <div class="sakura-container" id="sakuraContainer"></div>
+
+  <!-- ╔══════════════════════════════════════════╗
+       ║  SCREEN 1: HOME                          ║
+       ╚══════════════════════════════════════════╝ -->
+  <div id="homeScreen" class="screen home-screen active">
+    <!-- Decorative lanterns -->
+    <div class="flex gap-8 mb-4">
+      <span class="lantern" style="animation-delay: 0s;">🏮</span>
+      <span class="lantern" style="animation-delay: 0.5s;">🏮</span>
+      <span class="lantern" style="animation-delay: 1s;">🏮</span>
+    </div>
+
+    <h1 class="game-title">🎡 The Tet Cipher Wheel</h1>
+    <p class="game-subtitle">English Club — Lunar New Year Special 🧧</p>
+
+    <div class="flex flex-col gap-3 mt-6">
+      <button class="btn btn-primary btn-lg" onclick="Game.startGame()">
+        🎮 Start Game
+      </button>
+      <button class="btn btn-secondary" onclick="Game.showScreen('rulesScreen')">
+        📖 How to Play
+      </button>
+    </div>
+
+    <p class="mt-8 opacity-60 text-sm">Made with ❤️ for English Club</p>
+  </div>
+
+  <!-- ╔══════════════════════════════════════════╗
+       ║  SCREEN 2: RULES                         ║
+       ╚══════════════════════════════════════════╝ -->
+  <div id="rulesScreen" class="screen" style="flex-direction:column;align-items:center;justify-content:center;padding:2rem;background:var(--bg);">
+    <div class="bg-white rounded-2xl p-8 max-w-2xl w-full shadow-lg text-left">
+      <h2 class="text-3xl font-extrabold text-center mb-6" style="color:var(--primary);font-family:'Montserrat',sans-serif;">
+        📖 How to Play
+      </h2>
+
+      <div class="space-y-4">
+        <div class="p-4 rounded-xl" style="background:rgba(76,175,80,0.1);border-left:4px solid #4CAF50;">
+          <h3 class="font-bold text-lg">🟢 Round 1: The Double Scramble</h3>
+          <p class="text-gray-600 mt-1">Unscramble letters to form Tet-related 2-word phrases. <strong>10 points</strong> per correct answer.</p>
+        </div>
+
+        <div class="p-4 rounded-xl" style="background:rgba(255,193,7,0.1);border-left:4px solid #FFC107;">
+          <h3 class="font-bold text-lg">🟡 Round 2: Tet Visual Riddles</h3>
+          <p class="text-gray-600 mt-1">2 hints per question. Correct after Hint 1 = <strong>20 pts</strong>, after Hint 2 = <strong>10 pts</strong>.</p>
+        </div>
+
+        <div class="p-4 rounded-xl" style="background:rgba(255,152,0,0.1);border-left:4px solid #FF9800;">
+          <h3 class="font-bold text-lg">🟠 Round 3: The Secret Cipher</h3>
+          <p class="text-gray-600 mt-1">Decode numbers to letters (A=1, B=2…). <strong>30 points</strong> per correct answer.</p>
+        </div>
+
+        <div class="p-4 rounded-xl" style="background:rgba(211,47,47,0.1);border-left:4px solid #D32F2F;">
+          <h3 class="font-bold text-lg">🔴 Round 4: The Lucky Envelope</h3>
+          <p class="text-gray-600 mt-1">Pick an envelope, answer correctly to win <strong>random hidden points (10-50)</strong>. Option to <strong>Double</strong> your bet!</p>
+        </div>
+      </div>
+
+      <div class="text-center mt-6">
+        <button class="btn btn-primary" onclick="Game.showScreen('homeScreen')">
+          ← Back to Home
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ╔══════════════════════════════════════════╗
+       ║  SCREEN 3: ROUND SELECT                  ║
+       ╚══════════════════════════════════════════╝ -->
+  <div id="roundSelectScreen" class="screen round-select-screen">
+    <h2 class="text-3xl font-extrabold mb-6" style="color:var(--primary);font-family:'Montserrat',sans-serif;">
+      🎯 Select a Round
+    </h2>
+
+    <div class="flex flex-col gap-4 w-full max-w-lg" id="roundCardContainer">
+      <!-- Round cards inserted by JS -->
+    </div>
+
+    <!-- Leaderboard Mini -->
+    <div class="leaderboard-panel mt-6 w-full max-w-lg" id="leaderboardMini">
+      <h3 class="font-bold text-lg mb-2 text-center" style="color:var(--primary);">🏆 Leaderboard</h3>
+      <div id="leaderboardMiniContent"></div>
+    </div>
+
+    <div class="flex gap-3 mt-4">
+      <button class="btn btn-secondary" style="color:var(--text-dark);border-color:var(--primary);" onclick="Game.showScreen('homeScreen')">
+        ← Home
+      </button>
+      <button class="btn btn-danger" onclick="Game.showResults()">
+        🏁 End Game
+      </button>
+    </div>
+  </div>
+
+  <!-- ╔══════════════════════════════════════════╗
+       ║  SCREEN 4: GAME (Question Display)       ║
+       ╚══════════════════════════════════════════╝ -->
+  <div id="gameScreen" class="screen game-screen">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="round-badge" id="roundBadge">
+        <span id="roundIcon">🟢</span>
+        <span id="roundName">Round 1</span>
+      </div>
+      <div class="question-counter" id="questionCounter">Q 1 / 10</div>
+      <button class="btn btn-sm btn-secondary" onclick="Game.backToRoundSelect()">
+        ✕ Exit Round
+      </button>
+    </div>
+
+    <!-- Timer -->
+    <div class="timer-container">
+      <div class="timer-bar-bg">
+        <div class="timer-bar" id="timerBar" style="width:100%"></div>
+      </div>
+      <div class="timer-text" id="timerText">30</div>
+    </div>
+
+    <!-- Question Card -->
+    <div class="question-card" id="questionCard">
+      <!-- Dynamic content inserted by JS -->
+    </div>
+
+    <!-- Bottom Controls -->
+    <div class="flex flex-wrap justify-center gap-3 mt-4" id="questionControls">
+      <!-- Buttons inserted by JS per round type -->
+    </div>
+
+  </div>
+
+  <!-- ╔══════════════════════════════════════════╗
+       ║  SCREEN 5: ROUND 4 ENVELOPE SELECT       ║
+       ╚══════════════════════════════════════════╝ -->
+  <div id="envelopeSelectScreen" class="screen" style="flex-direction:column;align-items:center;justify-content:center;padding:2rem;background:var(--bg);">
+    <h2 class="text-3xl font-extrabold mb-2" style="color:var(--primary);font-family:'Montserrat',sans-serif;">
+      🧧 Pick a Lucky Envelope!
+    </h2>
+    <p class="text-gray-500 mb-4">Each envelope hides a random number of points (10-50)</p>
+
+    <div class="envelope-grid" id="envelopeGrid">
+      <!-- 10 envelopes inserted by JS -->
+    </div>
+
+    <button class="btn btn-secondary mt-4" style="color:var(--text-dark);border-color:var(--primary);" onclick="Game.backToRoundSelect()">
+      ← Back to Rounds
+    </button>
+  </div>
+
+  <!-- ╔══════════════════════════════════════════╗
+       ║  SCREEN 6: RESULTS / FINAL               ║
+       ╚══════════════════════════════════════════╝ -->
+  <div id="resultsScreen" class="screen results-screen">
+    <div class="trophy">🏆</div>
+    <h2 class="text-2xl font-bold mt-2 opacity-90">🎉 Game Over! 🎉</h2>
+    <div class="winner-name mt-2" id="winnerName">Team X</div>
+    <p class="text-lg opacity-80 mt-1" id="winnerLabel">is the CHAMPION!</p>
+
+    <div class="final-scores" id="finalScores">
+      <!-- Final score cards -->
+    </div>
+
+    <div class="flex gap-3 mt-8">
+      <button class="btn btn-primary btn-lg" onclick="Game.resetGame()">
+        🔄 Play Again
+      </button>
+      <button class="btn btn-secondary" onclick="Game.showScreen('homeScreen')">
+        🏠 Home
+      </button>
+    </div>
+  </div>
+
+  <!-- ╔══════════════════════════════════════════╗
+       ║  ROUND INTRO OVERLAY                     ║
+       ╚══════════════════════════════════════════╝ -->
+  <div class="round-intro-overlay" id="roundIntroOverlay">
+    <div class="round-intro-title" id="roundIntroTitle">Round 1</div>
+    <div class="round-intro-desc" id="roundIntroDesc">Description</div>
+    <div class="mt-6">
+      <button class="btn btn-primary btn-lg" id="roundIntroStart">
+        ▶ Let's Go!
+      </button>
+    </div>
+  </div>
+
+  <!-- ╔══════════════════════════════════════════╗
+       ║  MODAL: Award Points to Team             ║
+       ╚══════════════════════════════════════════╝ -->
+  <div class="modal-overlay" id="awardModal">
+    <div class="modal">
+      <h3 id="awardModalTitle">🎉 Award Points</h3>
+      <p class="text-gray-500 mb-4" id="awardModalSubtitle">Which team answered correctly?</p>
+      <div id="awardModalTeams">
+        <!-- Team buttons -->
+      </div>
+      <div class="flex gap-2 justify-center mt-4">
+        <button class="btn btn-sm btn-secondary" style="color:var(--text-dark);border-color:#ccc;" onclick="Game.closeAwardModal()">
+          Skip (No one)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ╔══════════════════════════════════════════╗
+       ║  MODAL: Double Bet (Round 4)             ║
+       ╚══════════════════════════════════════════╝ -->
+  <div class="modal-overlay" id="doubleModal">
+    <div class="modal">
+      <h3>🎰 Double or Nothing?</h3>
+      <p class="text-gray-500 mb-3" id="doubleModalInfo">This envelope has <strong id="doubleModalPoints">30</strong> points.</p>
+      <p class="text-sm text-gray-400 mb-4">If you choose Double and answer correctly, you get <strong>double</strong> the points! But if wrong, you get <strong>0</strong>.</p>
+      <div class="flex gap-3 justify-center">
+        <button class="btn btn-success" onclick="Game.acceptDouble()">
+          🔥 DOUBLE IT!
+        </button>
+        <button class="btn btn-secondary" style="color:var(--text-dark);border-color:#ccc;" onclick="Game.declineDouble()">
+          Play Safe
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ╔══════════════════════════════════════════╗
+       ║  FLOATING LEADERBOARD (Bottom-Left)      ║
+       ╚══════════════════════════════════════════╝ -->
+  <div class="floating-leaderboard" id="floatingLeaderboard" style="display:none;">
+    <div class="floating-leaderboard-header" onclick="Game.toggleFloatingLeaderboard()">
+      <h4>🏆 Scores</h4>
+      <span id="floatingLeaderboardToggle">▼</span>
+    </div>
+    <div class="floating-leaderboard-body" id="floatingLeaderboardContent">
+    </div>
+  </div>
+
+  <!-- ══ Scripts ══ -->
+  <script src="js/data.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
