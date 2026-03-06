@@ -216,7 +216,8 @@ const Game = {
   /* ── Initialize ── */
   init() {
     createSakuraPetals();
-    this.loadScoresFromStorage();
+    // Fresh start on page load — don't restore old scores
+    this.clearStorage();
     this.renderAllLeaderboards();
   },
 
@@ -309,6 +310,10 @@ const Game = {
     this.isAnswerRevealed = false;
     this.hint2Shown = false;
 
+    // Remove cinematic reveal mode from previous question
+    const prevCard = document.getElementById('questionCard');
+    if (prevCard) prevCard.classList.remove('cinematic-reveal-mode');
+
     const roundData = GAME_DATA[this.currentRound];
     const questions = roundData.questions;
     const q = questions[this.currentQuestionIndex];
@@ -363,10 +368,12 @@ const Game = {
     }).join('<div class="scramble-slash">/</div>');
 
     card.innerHTML = `
-      <div class="text-sm font-bold opacity-50 uppercase tracking-wider">Question ${q.id}</div>
-      ${getQuestionVisualHtml(q.id)}
-      <div class="text-lg font-semibold text-gray-500 mb-2">Unscramble the letters:</div>
-      <div class="scramble-display">${wordsHtml}</div>
+      <div class="question-main-content">
+        <div class="text-sm font-bold opacity-50 uppercase tracking-wider">Question ${q.id}</div>
+        ${getQuestionVisualHtml(q.id)}
+        <div class="text-lg font-semibold text-gray-500 mb-2">Unscramble the letters:</div>
+        <div class="scramble-display">${wordsHtml}</div>
+      </div>
       <div id="answerReveal"></div>
     `;
   },
@@ -374,15 +381,17 @@ const Game = {
   /* ── Render: Round 2 (Riddles) ── */
   renderRiddleQuestion(card, q) {
     card.innerHTML = `
-      <div class="text-sm font-bold opacity-50 uppercase tracking-wider">Question ${q.id}</div>
-      ${getQuestionVisualHtml(q.id)}
-      <div class="hint-box">
-        <div class="hint-label">Hint 1 (20 pts)</div>
-        <div>${q.hint1}</div>
-      </div>
-      <div class="hint-box" id="hint2Box" style="display:none;">
-        <div class="hint-label" style="background:#FF9800;">Hint 2 (10 pts)</div>
-        <div>${q.hint2}</div>
+      <div class="question-main-content">
+        <div class="text-sm font-bold opacity-50 uppercase tracking-wider">Question ${q.id}</div>
+        ${getQuestionVisualHtml(q.id)}
+        <div class="hint-box">
+          <div class="hint-label">Hint 1 (20 pts)</div>
+          <div>${q.hint1}</div>
+        </div>
+        <div class="hint-box" id="hint2Box" style="display:none;">
+          <div class="hint-label" style="background:#FF9800;">Hint 2 (10 pts)</div>
+          <div>${q.hint2}</div>
+        </div>
       </div>
       <div id="answerReveal"></div>
     `;
@@ -402,15 +411,17 @@ const Game = {
     const wordCountHint = q.wordCount ? `<div class="text-sm font-semibold mt-1" style="color:var(--secondary);">🔤 ${q.wordCount} words</div>` : '';
 
     card.innerHTML = `
-      <div class="text-sm font-bold opacity-50 uppercase tracking-wider">Question ${q.id}</div>
-      ${getQuestionVisualHtml(q.id)}
-      <div class="text-lg font-semibold text-gray-500 mb-2">Decode this cipher:</div>
-      <div class="cipher-code">${q.cipherDisplay}</div>
-      ${wordCountHint}
-      <details class="w-full max-w-xl mt-2">
-        <summary class="cursor-pointer text-sm font-bold" style="color:var(--primary);">📋 Show Cipher Key (A=1, B=2...)</summary>
-        <div class="cipher-table mt-2">${tableHtml}</div>
-      </details>
+      <div class="question-main-content">
+        <div class="text-sm font-bold opacity-50 uppercase tracking-wider">Question ${q.id}</div>
+        ${getQuestionVisualHtml(q.id)}
+        <div class="text-lg font-semibold text-gray-500 mb-2">Decode this cipher:</div>
+        <div class="cipher-code">${q.cipherDisplay}</div>
+        ${wordCountHint}
+        <details class="w-full max-w-xl mt-2">
+          <summary class="cursor-pointer text-sm font-bold" style="color:var(--primary);">📋 Show Cipher Key (A=1, B=2...)</summary>
+          <div class="cipher-table mt-2">${tableHtml}</div>
+        </details>
+      </div>
       <div id="answerReveal"></div>
     `;
   },
@@ -451,6 +462,10 @@ const Game = {
         ${getQuestionVisualHtml(q.id, true)}
       `;
     }
+
+    // Cinematic reveal — hide question, enlarge image & answer
+    const card = document.getElementById('questionCard');
+    if (card) card.classList.add('cinematic-reveal-mode');
 
     // Show award + next buttons, hide reveal buttons
     const awardBtn = document.getElementById('awardBtn');
@@ -624,6 +639,10 @@ const Game = {
     this.currentQuestionIndex = this.currentEnvelopeIndex;
     this.isAnswerRevealed = false;
 
+    // Remove cinematic reveal mode from previous question
+    const prevCard = document.getElementById('questionCard');
+    if (prevCard) prevCard.classList.remove('cinematic-reveal-mode');
+
     this.showScreen('gameScreen');
 
     // Update top bar
@@ -648,12 +667,14 @@ const Game = {
       : `<div class="text-sm font-semibold" style="color:var(--secondary);">💰 ${pts} points</div>`;
 
     card.innerHTML = `
-      <div class="text-sm font-bold opacity-50 uppercase tracking-wider">Question ${q.id}</div>
-      ${getQuestionVisualHtml(q.id)}
-      <span class="q-type-badge">${q.type}</span>
-      ${doubleHtml}
-      <div class="text-xl font-bold mt-2 leading-relaxed" style="max-width:600px;">${q.question}</div>
-      ${optionsHtml}
+      <div class="question-main-content">
+        <div class="text-sm font-bold opacity-50 uppercase tracking-wider">Question ${q.id}</div>
+        ${getQuestionVisualHtml(q.id)}
+        <span class="q-type-badge">${q.type}</span>
+        ${doubleHtml}
+        <div class="text-xl font-bold mt-2 leading-relaxed" style="max-width:600px;">${q.question}</div>
+        ${optionsHtml}
+      </div>
       <div id="answerReveal"></div>
     `;
 
@@ -686,6 +707,10 @@ const Game = {
         ${getQuestionVisualHtml(q.id, true)}
       `;
     }
+
+    // Cinematic reveal — hide question, enlarge image & answer
+    const card = document.getElementById('questionCard');
+    if (card) card.classList.add('cinematic-reveal-mode');
 
     // Show award, wrong, and next buttons
     const awardBtn = document.getElementById('awardBtn');
@@ -875,6 +900,13 @@ const Game = {
       const completed = localStorage.getItem('tetCipherWheel_completed');
       if (saved) this.scores = JSON.parse(saved);
       if (completed) this.completedRounds = new Set(JSON.parse(completed));
+    } catch (e) { /* ignore */ }
+  },
+
+  clearStorage() {
+    try {
+      localStorage.removeItem('tetCipherWheel_scores');
+      localStorage.removeItem('tetCipherWheel_completed');
     } catch (e) { /* ignore */ }
   }
 };
